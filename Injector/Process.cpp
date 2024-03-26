@@ -43,6 +43,30 @@ HANDLE Process::getHandle()
 	return _pHandle;
 }
 
+HANDLE Process::createThreadInProcess(LPTHREAD_START_ROUTINE routineStartAddr, void* params)
+{
+	HANDLE tmpHandle = CreateRemoteThread(_pHandle, 0, 0, routineStartAddr, params, NULL, nullptr);
+	if (tmpHandle == nullptr)
+	{
+		throw std::runtime_error("Failed to create new thread");
+	}
+	return tmpHandle;
+}
+
+void* Process::writeStringToProcess(std::string& data)
+{
+	void* newPage = VirtualAllocEx(_pHandle, nullptr, data.size() + 1, MEM_COMMIT, PAGE_READWRITE);
+	if (newPage == nullptr) return newPage;
+	SIZE_T bytesWritten = 0;
+	WriteProcessMemory(_pHandle, newPage, data.c_str(), data.size() + 1, &bytesWritten);
+	if (bytesWritten != data.size())
+	{
+		throw std::runtime_error("Failed to write data");
+		return nullptr;
+	}
+	return newPage;
+}
+
 int GetProcessIdByName(std::string desiredProcName)
 {
 	unsigned long bytesNeeded, currentSize = 512;

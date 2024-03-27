@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
             static Process tmp(pid);
             std::cout << "Process PID: " << tmp.getPid();
             Injector a(pid);
-            std::string c("123");
+            std::string c("C:\\Users\\puuni\\source\\repos\\processInjector\\x64\\Debug\\FakeDll.dll");
             a.injectDll(c);
         }
         else if (arg == "-name" && i + 1 < argc) 

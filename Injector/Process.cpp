@@ -59,7 +59,7 @@ void* Process::writeStringToProcess(std::string& data)
 	if (newPage == nullptr) return newPage;
 	SIZE_T bytesWritten = 0;
 	WriteProcessMemory(_pHandle, newPage, data.c_str(), data.size() + 1, &bytesWritten);
-	if (bytesWritten != data.size())
+	if (bytesWritten - 1 != data.size())
 	{
 		throw std::runtime_error("Failed to write data");
 		return nullptr;

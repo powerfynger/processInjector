@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "Process.h"
+#include "Injector.h"
 
 int main(int argc, char* argv[]) 
 {
@@ -17,6 +18,9 @@ int main(int argc, char* argv[])
             pid = std::stoi(argv[++i]);
             static Process tmp(pid);
             std::cout << "Process PID: " << tmp.getPid();
+            Injector a(pid);
+            std::string c("123");
+            a.injectDll(c);
         }
         else if (arg == "-name" && i + 1 < argc) 
         {
@@ -34,7 +38,7 @@ int main(int argc, char* argv[])
         }
     }
 
-
+    
 
 
     //std::cout << "PID: " << pid << std::endl;

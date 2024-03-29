@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
             static Process tmp(pid);
             std::cout << "Process PID: " << tmp.getPid();
             Injector a(pid);
-            std::string c("C:\\Users\\puuni\\source\\repos\\processInjector\\x64\\Debug\\FakeDll.dll");
+            std::string c("FakeDll.dll");
             a.injectDll(c);
         }
         else if (arg == "-name" && i + 1 < argc) 
@@ -38,9 +38,18 @@ int main(int argc, char* argv[])
         }
     }
 
+
+    WIN32_FIND_DATAA fd = { 0 };
+    FILE_NAME_INFO inf = { 0 };
+
+    HANDLE hFind = FindFirstFileA("C:\\Users\\puuni\\aaa.pdf", &fd);
+    std::cout << fd.cFileName << std::endl;
+
+    HINSTANCE dynamicLib = LoadLibraryA("FakeDll.dll");
+    fd = { 0 };
+    hFind = FindFirstFileA("C:\\Users\\puuni\\aaa.pdf", &fd);
     
-
-
+    std::cout << fd.cFileName << std::endl;
     //std::cout << "PID: " << pid << std::endl;
     //std::cout << "Process Name: " << processName << std::endl;
     //std::cout << "Function Name: " << functionName << std::endl;

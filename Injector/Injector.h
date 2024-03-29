@@ -1,7 +1,6 @@
 #pragma once
 #include "Process.h"
 #include <iostream>
-#include "detours.h"
 
 class Injector
 {

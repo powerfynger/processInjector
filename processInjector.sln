@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Injector", "Injector\Inject
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FakeDll", "FakeDll\FakeDll.vcxproj", "{E092EE73-8294-48BB-9E96-D061A37257B2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testProg", "testProg\testProg.vcxproj", "{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -33,6 +35,14 @@ Global
 		{E092EE73-8294-48BB-9E96-D061A37257B2}.Release|x64.Build.0 = Release|x64
 		{E092EE73-8294-48BB-9E96-D061A37257B2}.Release|x86.ActiveCfg = Release|Win32
 		{E092EE73-8294-48BB-9E96-D061A37257B2}.Release|x86.Build.0 = Release|Win32
+		{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}.Debug|x64.ActiveCfg = Debug|x64
+		{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}.Debug|x64.Build.0 = Debug|x64
+		{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}.Debug|x86.ActiveCfg = Debug|Win32
+		{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}.Debug|x86.Build.0 = Debug|Win32
+		{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}.Release|x64.ActiveCfg = Release|x64
+		{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}.Release|x64.Build.0 = Release|x64
+		{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}.Release|x86.ActiveCfg = Release|Win32
+		{CA3FF1D6-8A0F-4B33-A411-433E80FB78AC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

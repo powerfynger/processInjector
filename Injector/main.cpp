@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv[]) 
 {
-    std::string dllName("FakeDll.dll");
+    std::string dllName("C:\\Users\\puuni\\source\\repos\\processInjector\\x64\\Debug\\FakeDll.dll");
 
     int pid = 0;
     std::string processName;
@@ -35,6 +35,19 @@ int main(int argc, char* argv[])
         }
     }
 
+    
+    if (processName != "")
+    {
+        Injector inj(processName);
+        inj.injectDll(dllName, hideFileName, functionName);
+    }
+    else
+    {
+        Injector inj(pid);
+        inj.injectDll(dllName, hideFileName, functionName);
+    }
+    return 0;
+    /*
 
     WIN32_FIND_DATAA fd = { 0 };
     FILE_NAME_INFO inf = { 0 };
@@ -60,6 +73,6 @@ int main(int argc, char* argv[])
     {
         std::cout << fd.cFileName << std::endl;
     }
-
+    */
     return 0;
 }

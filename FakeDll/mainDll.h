@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <iostream>
 #include "detours.h"
+#include <vector>
 #include "../Injector/Injector.h"
 
 #ifdef MYDLL_EXPORTS

@@ -7,6 +7,11 @@ Injector::Injector(std::string procName) : _targetProcess(procName) { _pid = 123
 
 void Injector::injectDll(std::string& dllPath, std::string& fileToHide, std::string& funcToTrack)
 {
+    if (dllPath == "" || fileToHide == "" || funcToTrack == "")
+    {
+        throw std::runtime_error("Something went wrong");
+    }
+
     if (!_checkDllExists(dllPath)) 
     {
         throw std::runtime_error("DLL not found: " + dllPath);
@@ -60,7 +65,6 @@ void Injector::injectDll(std::string& dllPath, std::string& fileToHide, std::str
     CloseHandle(remoteThread);
 }
 
-
 bool Injector::_writeToPipe(DllData& data, LPCWSTR* pipeName)
 {
     HANDLE hPipe;
@@ -77,25 +81,52 @@ bool Injector::_writeToPipe(DllData& data, LPCWSTR* pipeName)
         NULL                        // Защита по умолчанию
     );
 
-    if (hPipe == INVALID_HANDLE_VALUE) 
+    if (hPipe == INVALID_HANDLE_VALUE)
     {
-        //std::cerr << "Failed to create named pipe. Error code: " << GetLastError() << std::endl;
+        std::cerr << "Failed to create named pipe. Error code: " << GetLastError() << std::endl;
         throw std::runtime_error("Failed to create named pipe.");
         return false;
     }
 
-    if (!ConnectNamedPipe(hPipe, NULL)) 
+    if (!(ConnectNamedPipe(hPipe, NULL) ?
+        TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)))
     {
-        //std::cerr << "Failed to connect to named pipe. Error code: " << GetLastError() << std::endl;
+        std::cerr << "Failed to connect to named pipe. Error code: " << GetLastError() << std::endl;
         CloseHandle(hPipe);
         throw std::runtime_error("Failed to connect to named pipe.");
         return false;
     }
 
     DWORD bytesWritten;
-    if (!WriteFile(hPipe, &data, sizeof(DllData), &bytesWritten, NULL)) 
+    int fileNameLen = data.fileName.length(), funcLen = data.funcName.length();
+
+    if (!WriteFile(hPipe, &fileNameLen, sizeof(int), &bytesWritten, NULL))
     {
-        //std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
+        std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
+        CloseHandle(hPipe);
+        throw std::runtime_error("Failed to write to named pipe.");
+        return false;
+    }
+
+    if (!WriteFile(hPipe, &funcLen, sizeof(int), &bytesWritten, NULL))
+    {
+        std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
+        CloseHandle(hPipe);
+        throw std::runtime_error("Failed to write to named pipe.");
+        return false;
+    }
+
+    if (!WriteFile(hPipe, data.fileName.c_str(), (fileNameLen) * sizeof(char), &bytesWritten, NULL))
+    {
+        std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
+        CloseHandle(hPipe);
+        throw std::runtime_error("Failed to write to named pipe.");
+        return false;
+    }
+
+    if (!WriteFile(hPipe, data.funcName.c_str(), (funcLen) * sizeof(char), &bytesWritten, NULL))
+    {
+        std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
         CloseHandle(hPipe);
         throw std::runtime_error("Failed to write to named pipe.");
         return false;
@@ -104,9 +135,10 @@ bool Injector::_writeToPipe(DllData& data, LPCWSTR* pipeName)
     CloseHandle(hPipe);
     return true;
 }
+
 bool Injector::_checkDllExists(std::string& dllPath)
 {
-	HINSTANCE dynamicLib = LoadLibraryA(dllPath.c_str());
+	HINSTANCE dynamicLib = LoadLibraryExA(dllPath.c_str(), NULL, LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE);
 
 	if (dynamicLib)
 	{

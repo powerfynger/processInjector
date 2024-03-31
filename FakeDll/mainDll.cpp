@@ -9,7 +9,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
     {
     case DLL_PROCESS_ATTACH:
 
-        if (readConfigFromPipe(&pipeName)) break;
+        if (!readConfigFromPipe(&pipeName)) break;
          
 
         DetourRestoreAfterWith();
@@ -127,39 +127,81 @@ BOOL WINAPI MyFindNextFileA(
 bool readConfigFromPipe(LPCWSTR* pipeName)
 {
     DllData receivedData;
-    DWORD bytesRead;
-    HANDLE hPipe;
-
-    hPipe = CreateFile(
-        *pipeName,                     // Имя канала
-        GENERIC_READ,                // Режим доступа
-        0,                           // Нет разделяемого доступа
-        NULL,                        // Защита по умолчанию
-        OPEN_EXISTING,               // Открыть существующий канал
-        0,                           // Атрибуты по умолчанию
-        NULL                         // Нет атрибутов шаблона файла
-    );
-
-    if (hPipe == INVALID_HANDLE_VALUE) 
+    DWORD bytesRead = 0;
+    HANDLE hPipe = INVALID_HANDLE_VALUE;
+    while (hPipe == INVALID_HANDLE_VALUE)
     {
-        std::cerr << "Failed to open named pipe. Error code: " << GetLastError() << std::endl;
-        return 1;
+        hPipe = CreateFile(
+            *pipeName,                     // Имя канала
+            GENERIC_READ,                // Режим доступа
+            0,                           // Нет разделяемого доступа
+            NULL,                        // Защита по умолчанию
+            OPEN_EXISTING,               // Открыть существующий канал
+            0,                           // Атрибуты по умолчанию
+            NULL                         // Нет атрибутов шаблона файла
+        );
+        Sleep(1000);
+        std::cout << "Waiting for connection\n";
+    }
+    if (hPipe == INVALID_HANDLE_VALUE)
+    {
+        std::cout << "Failed to open named pipe. Error code: " << GetLastError() << std::endl;
+        return false;
     }
 
     // Считываем данные из канала
+    std::cout << "Pipe connected\n";
 
-    if (!ReadFile(hPipe, &receivedData, sizeof(DllData), &bytesRead, NULL)) 
+    int fileNameLen = 0, funcLen = 0;
+
+    if (!ReadFile(hPipe, &fileNameLen, sizeof(int), &bytesRead, NULL))
     {
-        std::cerr << "Failed to read from named pipe. Error code: " << GetLastError() << std::endl;
+        std::cout << "Failed to read from named pipe. Error code: " << GetLastError() << std::endl;
         CloseHandle(hPipe);
-        return 1;
+        return false;
+    }
+    std::cout << "Readed: " << fileNameLen << " bytes\n";
+
+    if (!ReadFile(hPipe, &funcLen, sizeof(int), &bytesRead, NULL))
+    {
+        std::cout << "Failed to read from named pipe. Error code: " << GetLastError() << std::endl;
+        CloseHandle(hPipe);
+        return false;
     }
 
-    conf = receivedData;
+    std::cout << "Readed: " << funcLen << " bytes\n";
 
-    
+    // Чтение имени файла
+    std::vector<char> fileNameBuffer(fileNameLen + 1); 
+    if (!ReadFile(hPipe, fileNameBuffer.data(), fileNameLen * sizeof(char), &bytesRead, NULL))
+    {
+        std::cout << "Failed to read from named pipe. Error code: " << GetLastError() << std::endl;
+        CloseHandle(hPipe);
+        return false;
+    }
+    fileNameBuffer[fileNameLen] = '\0'; 
+    receivedData.fileName = fileNameBuffer.data();
+    std::cout << "Readed: " << receivedData.fileName << "\n";
+
+    // Чтение имени функции
+    std::vector<char> funcNameBuffer(funcLen + 1); 
+    if (!ReadFile(hPipe, funcNameBuffer.data(), funcLen * sizeof(char), &bytesRead, NULL))
+    {
+        std::cout << "Failed to read from named pipe. Error code: " << GetLastError() << std::endl;
+        CloseHandle(hPipe);
+        return false;
+    }
+    funcNameBuffer[funcLen] = '\0';
+    receivedData.funcName = funcNameBuffer.data();
+    std::cout << "Readed: " << receivedData.funcName << "\n";
+
+
+    conf.fileName = receivedData.fileName;
+    conf.funcName = receivedData.funcName;
+
+
+
     CloseHandle(hPipe);
 
-    return 0;
-
+    return true;
 }

@@ -2,11 +2,15 @@
 #include <string>
 #include "Process.h"
 #include "Injector.h"
+#include "..\FakeDll\mainDll.h"
+
 
 int main(int argc, char* argv[]) 
 {
+    std::string dllName("FakeDll.dll");
+
     int pid = 0;
-    std::string processName = "mspaint.exe";
+    std::string processName;
     std::string functionName;
     std::string hideFileName;
 
@@ -15,18 +19,11 @@ int main(int argc, char* argv[])
         std::string arg = argv[i];
         if (arg == "-pid" && i + 1 < argc) 
         {
-            pid = std::stoi(argv[++i]);
-            static Process tmp(pid);
-            std::cout << "Process PID: " << tmp.getPid();
-            Injector a(pid);
-            std::string c("FakeDll.dll");
-            a.injectDll(c);
+            pid = std::stoi(argv[++i]);        
         }
         else if (arg == "-name" && i + 1 < argc) 
         {
             processName = argv[++i];
-            static Process tmp(processName);
-            std::cout << "Process PID: " << tmp.getPid();
         }
         else if (arg == "-func" && i + 1 < argc) 
         {
@@ -45,19 +42,24 @@ int main(int argc, char* argv[])
     HANDLE hFind = FindFirstFileA("C:\\Users\\puuni\\aaa.pdf", &fd);
     std::cout << fd.cFileName << std::endl;
 
-    HINSTANCE dynamicLib = LoadLibraryA("FakeDll.dll");
+    if (FindNextFileA(hFind, &fd))
+    {
+        std::cout << fd.cFileName << std::endl;
+    }
+
+    //HINSTANCE dynamicLib = LoadLibraryA("FakeDll.dll");
+    Injector a(GetCurrentProcessId());
+    a.injectDll(dllName, hideFileName, functionName);
+    
     fd = { 0 };
     hFind = FindFirstFileA("C:\\Users\\puuni\\aaa.pdf", &fd);
     
     std::cout << fd.cFileName << std::endl;
-    //std::cout << "PID: " << pid << std::endl;
-    //std::cout << "Process Name: " << processName << std::endl;
-    //std::cout << "Function Name: " << functionName << std::endl;
-    //std::cout << "Hide File Name: " << hideFileName << std::endl;
 
-
-
-
+    if (FindNextFileA(hFind, &fd))
+    {
+        std::cout << fd.cFileName << std::endl;
+    }
 
     return 0;
 }

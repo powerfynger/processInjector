@@ -3,14 +3,15 @@
 
 Injector::Injector(int pid) : _pid(pid), _targetProcess(pid) {}
 
-void Injector::injectDll(std::string& dllPath)
+Injector::Injector(std::string procName) : _targetProcess(procName) { _pid = 123; }
+
+void Injector::injectDll(std::string& dllPath, std::string& fileToHide, std::string& funcToTrack)
 {
     if (!_checkDllExists(dllPath)) 
     {
         throw std::runtime_error("DLL not found: " + dllPath);
     }
 
-    
     void* remoteDllPath = _targetProcess.writeStringToProcess(dllPath);
     if (remoteDllPath == nullptr) 
     {
@@ -30,14 +31,26 @@ void Injector::injectDll(std::string& dllPath)
         throw std::runtime_error("Failed to get LoadLibraryA address");
     }
 
-    
+
     HANDLE remoteThread = _targetProcess.createThreadInProcess(loadLibraryAddr, remoteDllPath);
     if (remoteThread == nullptr) 
     {
         throw std::runtime_error("Failed to create remote thread");
     }
 
-    
+    LPCWSTR pipeName = L"\\\\.\\pipe\\NothingSpecialHere";
+    static DllData data;
+
+    data.fileName = fileToHide;
+    data.funcName = funcToTrack;
+
+
+    if (!_writeToPipe(data, &pipeName))
+    {
+        CloseHandle(remoteThread);
+        return;
+    }
+
     WaitForSingleObject(remoteThread, INFINITE);
 
     
@@ -47,6 +60,50 @@ void Injector::injectDll(std::string& dllPath)
     CloseHandle(remoteThread);
 }
 
+
+bool Injector::_writeToPipe(DllData& data, LPCWSTR* pipeName)
+{
+    HANDLE hPipe;
+    hPipe = CreateNamedPipe(
+        *pipeName,                    // Имя канала
+        PIPE_ACCESS_DUPLEX,          // Режим доступа
+        PIPE_TYPE_MESSAGE |         // Режим передачи данных сообщениями
+        PIPE_READMODE_MESSAGE |     // Режим чтения данных сообщениями
+        PIPE_WAIT,                  // Режим ожидания
+        PIPE_UNLIMITED_INSTANCES,   // Максимальное количество экземпляров канала
+        sizeof(DllData),             // Размер выходного буфера
+        sizeof(DllData),             // Размер входного буфера
+        0,                          // Время ожидания
+        NULL                        // Защита по умолчанию
+    );
+
+    if (hPipe == INVALID_HANDLE_VALUE) 
+    {
+        //std::cerr << "Failed to create named pipe. Error code: " << GetLastError() << std::endl;
+        throw std::runtime_error("Failed to create named pipe.");
+        return false;
+    }
+
+    if (!ConnectNamedPipe(hPipe, NULL)) 
+    {
+        //std::cerr << "Failed to connect to named pipe. Error code: " << GetLastError() << std::endl;
+        CloseHandle(hPipe);
+        throw std::runtime_error("Failed to connect to named pipe.");
+        return false;
+    }
+
+    DWORD bytesWritten;
+    if (!WriteFile(hPipe, &data, sizeof(DllData), &bytesWritten, NULL)) 
+    {
+        //std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
+        CloseHandle(hPipe);
+        throw std::runtime_error("Failed to write to named pipe.");
+        return false;
+    }
+
+    CloseHandle(hPipe);
+    return true;
+}
 bool Injector::_checkDllExists(std::string& dllPath)
 {
 	HINSTANCE dynamicLib = LoadLibraryA(dllPath.c_str());
@@ -76,3 +133,4 @@ bool Injector::_checkDllExists(std::string& dllPath)
     LocalFree(messageBuffer);
 	return false;
 }
+

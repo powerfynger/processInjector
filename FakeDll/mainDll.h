@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <iostream>
 #include "detours.h"
+#include "../Injector/Injector.h"
 
 #ifdef MYDLL_EXPORTS
 #define MYDLL_API __declspec(dllexport)
@@ -9,7 +10,12 @@
 #define MYDLL_API __declspec(dllimport)
 #endif
 
+//static std::string fileNameToHide;
+DllData conf;
+
 MYDLL_API BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved);
+
+//void setFileToHideDll(std::string& file);
 
 HANDLE WINAPI MyCreateFileA(
     LPCSTR lpFileName,
@@ -51,3 +57,4 @@ BOOL (WINAPI *pFindNextFileA)(
     LPWIN32_FIND_DATAA lpFindFileData
 ) = FindNextFileA;
 
+bool readConfigFromPipe(LPCWSTR* pipeName);

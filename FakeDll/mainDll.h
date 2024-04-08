@@ -18,8 +18,8 @@ MYDLL_API BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVO
 
 //void setFileToHideDll(std::string& file);
 
-HANDLE WINAPI MyCreateFileA(
-    LPCSTR lpFileName,
+HANDLE WINAPI MyCreateFileW(
+    LPCWSTR lpFileName,
     DWORD dwDesiredAccess,
     DWORD dwShareMode,
     LPSECURITY_ATTRIBUTES lpSecurityAttributes,
@@ -27,35 +27,36 @@ HANDLE WINAPI MyCreateFileA(
     DWORD dwFlagsAndAttributes,
     HANDLE hTemplateFile
 );
-HANDLE (WINAPI *pCreateFileA)(
-    LPCSTR lpFileName,
+HANDLE (WINAPI *pCreateFileW)(
+    LPCWSTR lpFileName,
     DWORD dwDesiredAccess,
     DWORD dwShareMode,
     LPSECURITY_ATTRIBUTES lpSecurityAttributes,
     DWORD dwCreationDisposition,
     DWORD dwFlagsAndAttributes,
     HANDLE hTemplateFile
-) = CreateFileA;
+) = CreateFileW;
 
-HANDLE WINAPI  MyFindFirstFileA(
-    LPCSTR lpFileName,
-    LPWIN32_FIND_DATAA lpFindFileData
+HANDLE WINAPI  MyFindFirstFileW(
+    LPCWSTR lpFileName,
+    LPWIN32_FIND_DATAW lpFindFileData
 );
 
 
-HANDLE (WINAPI  *pFindFirstFileA)(
-    LPCSTR lpFileName,
-    LPWIN32_FIND_DATAA lpFindFileData
-) = FindFirstFileA;
+HANDLE (WINAPI  *pFindFirstFileW)(
+    LPCWSTR lpFileName,
+    LPWIN32_FIND_DATAW  lpFindFileData
+) = FindFirstFileW;
 
-BOOL WINAPI MyFindNextFileA(
+BOOL WINAPI MyFindNextFileW(
     HANDLE  hFindFile,
-    LPWIN32_FIND_DATAA lpFindFileData
+    LPWIN32_FIND_DATAW lpFindFileData
 );
 
-BOOL (WINAPI *pFindNextFileA)(
+BOOL (WINAPI *pFindNextFileW)(
     HANDLE  hFindFile,
-    LPWIN32_FIND_DATAA lpFindFileData
-) = FindNextFileA;
+    LPWIN32_FIND_DATAW lpFindFileData
+) = FindNextFileW;
 
 bool readConfigFromPipe(LPCWSTR* pipeName);
+std::wstring getFileName(const std::wstring& filePath);

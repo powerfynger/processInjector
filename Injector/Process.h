@@ -11,7 +11,7 @@ class Process
 {
 public:
 	Process(int pid);
-	Process(std::string procName);
+	Process(std::wstring procName);
 	void openHandleByPid();
 	int getPid();
 	void setPid(int pid);

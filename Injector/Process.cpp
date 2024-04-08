@@ -14,9 +14,10 @@ Process::Process(int pid) : _pid(pid)
 	}
 }
 
-Process::Process(std::string procName)
+Process::Process(std::wstring procName)
 {
-	int tmpPid = GetProcessIdByName(procName);
+	std::string charProcName(procName.begin(), procName.end());
+	int tmpPid = GetProcessIdByName(charProcName);
 	Process tmp(tmpPid);
 	_pid = tmpPid;
 	_pHandle = tmp.getHandle();

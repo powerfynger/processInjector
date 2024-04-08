@@ -3,11 +3,11 @@
 
 Injector::Injector(int pid) : _pid(pid), _targetProcess(pid) {}
 
-Injector::Injector(std::string procName) : _targetProcess(procName) { _pid = 123; }
+Injector::Injector(std::wstring procName) : _targetProcess(procName) { _pid = 123; }
 
-void Injector::injectDll(std::string& dllPath, std::string& fileToHide, std::string& funcToTrack)
+void Injector::injectDll(std::string& dllPath, std::wstring& fileToHide, std::wstring& funcToTrack)
 {
-    if (dllPath == "" || fileToHide == "" || funcToTrack == "")
+    if (dllPath == "" || fileToHide == L"" || funcToTrack == L"")
     {
         throw std::runtime_error("Something went wrong");
     }
@@ -67,6 +67,8 @@ void Injector::injectDll(std::string& dllPath, std::string& fileToHide, std::str
 
 bool Injector::_writeToPipe(DllData& data, LPCWSTR* pipeName)
 {
+    // TODO: 
+    // Recheck args 
     HANDLE hPipe;
     hPipe = CreateNamedPipe(
         *pipeName,                    // Имя канала
@@ -116,7 +118,7 @@ bool Injector::_writeToPipe(DllData& data, LPCWSTR* pipeName)
         return false;
     }
 
-    if (!WriteFile(hPipe, data.fileName.c_str(), (fileNameLen) * sizeof(char), &bytesWritten, NULL))
+    if (!WriteFile(hPipe, data.fileName.c_str(), (fileNameLen) * sizeof(wchar_t), &bytesWritten, NULL))
     {
         std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
         CloseHandle(hPipe);
@@ -124,7 +126,7 @@ bool Injector::_writeToPipe(DllData& data, LPCWSTR* pipeName)
         return false;
     }
 
-    if (!WriteFile(hPipe, data.funcName.c_str(), (funcLen) * sizeof(char), &bytesWritten, NULL))
+    if (!WriteFile(hPipe, data.funcName.c_str(), (funcLen) * sizeof(wchar_t), &bytesWritten, NULL))
     {
         std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
         CloseHandle(hPipe);

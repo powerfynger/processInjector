@@ -3,17 +3,17 @@
 #include <iostream>
 
 struct DllData {
-	std::string fileName;
-	std::string funcName;
+	std::wstring fileName;
+	std::wstring funcName;
 };
 
 class Injector
 {
 public:
 	Injector(int pid);
-	Injector(std::string procName);
+	Injector(std::wstring procName);
 
-	void injectDll(std::string& dllPath, std::string& fileToHide, std::string& funcToTrack);
+	void injectDll(std::string& dllPath, std::wstring& fileToHide, std::wstring& funcToTrack);
 private:
 	int _pid;
 	Process _targetProcess;

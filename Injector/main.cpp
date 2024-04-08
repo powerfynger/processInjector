@@ -3,40 +3,42 @@
 #include "Process.h"
 #include "Injector.h"
 #include "..\FakeDll\mainDll.h"
+// TODO:
+// Отдельный класс для сервера/клиента pipe
+// Мониторинг вызовов произвольных функций из kernel32
 
-
-int main(int argc, char* argv[]) 
+int wmain(int argc, wchar_t* argv[]) 
 {
     std::string dllName("C:\\Users\\puuni\\source\\repos\\processInjector\\x64\\Debug\\FakeDll.dll");
 
     int pid = 0;
-    std::string processName;
-    std::string functionName;
-    std::string hideFileName;
+    std::wstring processName;
+    std::wstring functionName;
+    std::wstring hideFileName;
 
     for (int i = 1; i < argc; ++i) 
     {
-        std::string arg = argv[i];
-        if (arg == "-pid" && i + 1 < argc) 
+        std::wstring arg = argv[i];
+        if (arg == L"-pid" && i + 1 < argc) 
         {
             pid = std::stoi(argv[++i]);        
         }
-        else if (arg == "-name" && i + 1 < argc) 
+        else if (arg == L"-name" && i + 1 < argc) 
         {
             processName = argv[++i];
         }
-        else if (arg == "-func" && i + 1 < argc) 
+        else if (arg == L"-func" && i + 1 < argc) 
         {
             functionName = argv[++i];
         }
-        else if (arg == "-hide" && i + 1 < argc) 
+        else if (arg == L"-hide" && i + 1 < argc) 
         {
             hideFileName = argv[++i];
         }
     }
 
     
-    if (processName != "")
+    if (processName != L"")
     {
         Injector inj(processName);
         inj.injectDll(dllName, hideFileName, functionName);

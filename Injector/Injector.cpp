@@ -43,19 +43,18 @@ void Injector::injectDll(std::string& dllPath, std::wstring& fileToHide, std::ws
         throw std::runtime_error("Failed to create remote thread");
     }
 
-    LPCWSTR pipeName = L"\\\\.\\pipe\\NothingSpecialHere";
     static DllData data;
 
     data.fileName = fileToHide;
     data.funcName = funcToTrack;
 
+    PipeInstance PipeInstance(std::wstring(L"\\\\.\\pipe\\NothingSpecialHere"));
+    
+    PipeInstance.openPipeServer();
 
-    if (!_writeToPipe(data, &pipeName))
-    {
-        CloseHandle(remoteThread);
-        return;
-    }
-
+    PipeInstance.writeWstringToPipe(fileToHide);
+    PipeInstance.writeWstringToPipe(funcToTrack);
+    
     WaitForSingleObject(remoteThread, INFINITE);
 
     
@@ -63,80 +62,18 @@ void Injector::injectDll(std::string& dllPath, std::wstring& fileToHide, std::ws
 
     
     CloseHandle(remoteThread);
+    while (true)
+    {
+        std::wstring tmp;
+        tmp = PipeInstance.readWstringFromPipe();
+        if (tmp.length() != 0)
+        {
+            std::wcout << tmp << std::endl;
+        }
+        Sleep(200);
+    }
 }
 
-bool Injector::_writeToPipe(DllData& data, LPCWSTR* pipeName)
-{
-    // TODO: 
-    // Recheck args 
-    HANDLE hPipe;
-    hPipe = CreateNamedPipe(
-        *pipeName,                    // Имя канала
-        PIPE_ACCESS_DUPLEX,          // Режим доступа
-        PIPE_TYPE_MESSAGE |         // Режим передачи данных сообщениями
-        PIPE_READMODE_MESSAGE |     // Режим чтения данных сообщениями
-        PIPE_WAIT,                  // Режим ожидания
-        PIPE_UNLIMITED_INSTANCES,   // Максимальное количество экземпляров канала
-        sizeof(DllData),             // Размер выходного буфера
-        sizeof(DllData),             // Размер входного буфера
-        0,                          // Время ожидания
-        NULL                        // Защита по умолчанию
-    );
-
-    if (hPipe == INVALID_HANDLE_VALUE)
-    {
-        std::cerr << "Failed to create named pipe. Error code: " << GetLastError() << std::endl;
-        throw std::runtime_error("Failed to create named pipe.");
-        return false;
-    }
-
-    if (!(ConnectNamedPipe(hPipe, NULL) ?
-        TRUE : (GetLastError() == ERROR_PIPE_CONNECTED)))
-    {
-        std::cerr << "Failed to connect to named pipe. Error code: " << GetLastError() << std::endl;
-        CloseHandle(hPipe);
-        throw std::runtime_error("Failed to connect to named pipe.");
-        return false;
-    }
-
-    DWORD bytesWritten;
-    int fileNameLen = data.fileName.length(), funcLen = data.funcName.length();
-
-    if (!WriteFile(hPipe, &fileNameLen, sizeof(int), &bytesWritten, NULL))
-    {
-        std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
-        CloseHandle(hPipe);
-        throw std::runtime_error("Failed to write to named pipe.");
-        return false;
-    }
-
-    if (!WriteFile(hPipe, &funcLen, sizeof(int), &bytesWritten, NULL))
-    {
-        std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
-        CloseHandle(hPipe);
-        throw std::runtime_error("Failed to write to named pipe.");
-        return false;
-    }
-
-    if (!WriteFile(hPipe, data.fileName.c_str(), (fileNameLen) * sizeof(wchar_t), &bytesWritten, NULL))
-    {
-        std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
-        CloseHandle(hPipe);
-        throw std::runtime_error("Failed to write to named pipe.");
-        return false;
-    }
-
-    if (!WriteFile(hPipe, data.funcName.c_str(), (funcLen) * sizeof(wchar_t), &bytesWritten, NULL))
-    {
-        std::cerr << "Failed to write to named pipe. Error code: " << GetLastError() << std::endl;
-        CloseHandle(hPipe);
-        throw std::runtime_error("Failed to write to named pipe.");
-        return false;
-    }
-
-    CloseHandle(hPipe);
-    return true;
-}
 
 bool Injector::_checkDllExists(std::string& dllPath)
 {

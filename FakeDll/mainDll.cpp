@@ -1,21 +1,78 @@
 #include "mainDll.h"
 
 
+
+int HookAllFunctions()
+{
+    HMODULE hModule = GetModuleHandle(NULL);
+
+    // Получаем указатель на начало таблицы импортов
+    PIMAGE_DOS_HEADER pDosHeader = (PIMAGE_DOS_HEADER)hModule;
+    PIMAGE_NT_HEADERS pNTHeaders = (PIMAGE_NT_HEADERS)((BYTE*)hModule + pDosHeader->e_lfanew);
+    PIMAGE_IMPORT_DESCRIPTOR pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR)((BYTE*)hModule + pNTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+
+    // Проходим по таблице импортов и устанавливаем хук для каждой функции
+    while (pImportDesc->Name != NULL)
+    {
+        LPCSTR moduleName = (LPCSTR)((BYTE*)hModule + pImportDesc->Name);
+        HMODULE hImportModule = GetModuleHandleA(moduleName);
+        if (hImportModule == GetModuleHandleA("kernel32.dll"))
+        {
+            PIMAGE_THUNK_DATA pThunk = (PIMAGE_THUNK_DATA)((BYTE*)hModule + pImportDesc->FirstThunk);
+            while (pThunk->u1.Function != NULL)
+            {
+                if (!(pThunk->u1.Ordinal & IMAGE_ORDINAL_FLAG))
+                {
+                    // Если имя функции доступно, устанавливаем хук
+                    LPCSTR functionName = (LPCSTR)(((PIMAGE_IMPORT_BY_NAME)pThunk->u1.AddressOfData)->Name);
+                    DetourAttach(&(PVOID&)pThunk->u1.Function, MyHookFunction);
+                }
+                pThunk++;
+            }
+        }
+        pImportDesc++;
+    }
+    return 0;
+}
+
+void UnHookAllFuntions()
+{
+   
+}
+
+FARPROC WINAPI MyHookFunction(LPCSTR functionName)
+{
+    // Печатаем название вызванной функции
+    std::cout << "Function called: " << functionName << std::endl;
+
+    // Ищем адрес оригинальной функции
+    HMODULE hModule = GetModuleHandleA("kernel32.dll");
+    FARPROC originalFunction = GetProcAddress(hModule, functionName);
+
+    // Добавляем адрес оригинальной функции в вектор для последующего вызова
+    originalFunctions.push_back((PfnOriginalFunction)originalFunction);
+
+    // Возвращаем адрес оригинальной функции
+    return originalFunction;
+}
+
+
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
    
-    LPCWSTR pipeName = L"\\\\.\\pipe\\NothingSpecialHere";
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
 
-        if (!readConfigFromPipe(&pipeName)) break;
-         
-
+        pipeClient.waitForClientConnection();
+        conf.fileName = pipeClient.readWstringFromPipe();
+        conf.funcName = pipeClient.readWstringFromPipe();
+        
         DetourRestoreAfterWith();
         DetourTransactionBegin();
         DetourUpdateThread(GetCurrentThread());
 
+        //HookAllFunctions();
 
         //DetourAttach((PVOID*)CreateFileA, MyCreateFile); 
         pCreateFileW = (HANDLE(WINAPI*)(
@@ -41,7 +98,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
         if (conf.funcName == L"CreateFile") DetourAttach(&(PVOID&)pCreateFileW, MyCreateFileW);
         if (conf.funcName == L"FindFirstFile") DetourAttach(&(PVOID&)pFindFirstFileW, MyFindFirstFileW);
         if (conf.funcName == L"FindNextFile") DetourAttach(&(PVOID&)pFindNextFileW, MyFindNextFileW);
-        
         
         DetourTransactionCommit();
 
@@ -78,11 +134,15 @@ HANDLE WINAPI MyCreateFileW(
     HANDLE hTemplateFile
 ) 
 {
-    std::cout << "[+] Captured CreateFile call\n";
+    //std::cout << "[+] Captured CreateFile call\n";
+    std::wstring tmp(L"[+] Captured CreateFile call");
     
+    pipeClient.writeWstringToPipe(tmp);
     if ((!_wcsicmp(conf.fileName.c_str(), lpFileName)) || (!_wcsicmp(getFileName(conf.fileName).c_str(), lpFileName)))
     {
-        std::cout << "[+] CreateFile FILE WAS HIDDEN\n";
+        tmp = L"[+] CreateFile FILE WAS HIDDEN";
+        pipeClient.writeWstringToPipe(tmp);
+        //std::cout << "[+] CreateFile FILE WAS HIDDEN\n";
         return INVALID_HANDLE_VALUE;
     }
     
@@ -96,10 +156,14 @@ HANDLE WINAPI MyFindFirstFileW(
     LPWIN32_FIND_DATAW lpFindFileData
 )
 {
-    std::cout << "[+] Captured FindFirstfile call\n";
+    std::wstring tmp(L"[+] Captured FindFirstfile call");
+    pipeClient.writeWstringToPipe(tmp);
+    //std::cout << "[+] Captured FindFirstfile call\n";
     if ((!_wcsicmp(conf.fileName.c_str(), lpFileName)) || (!_wcsicmp(getFileName(conf.fileName).c_str(), lpFileName)))
     {
-        std::cout << "[+] FindFirstfile FILE WAS HIDDEN\n";
+        //std::cout << "[+] FindFirstfile FILE WAS HIDDEN\n";
+        tmp = L"[+] FindFirstfile FILE WAS HIDDEN";
+        pipeClient.writeWstringToPipe(tmp);
         return INVALID_HANDLE_VALUE;
     }
 
@@ -114,12 +178,16 @@ BOOL WINAPI MyFindNextFileW(
     LPWIN32_FIND_DATAW lpFindFileData
 )
 {
-    std::cout << "[+] Captured FindNextFileW call\n";
+    //std::cout << "[+] Captured FindNextFileW call\n";
+    std::wstring tmp(L"[+] Captured FindNextFileW call");
+    pipeClient.writeWstringToPipe(tmp);
     BOOL ret = pFindNextFileW(hFindFile, lpFindFileData);
     //wcscmp()
     if ((!_wcsicmp(conf.fileName.c_str(), lpFindFileData->cFileName)) || (!_wcsicmp(getFileName(conf.fileName).c_str(), lpFindFileData->cFileName)))
     {
-        std::cout << "[+] FindNextFile FILE WAS HIDDEN\n";
+        //std::cout << "[+] FindNextFile FILE WAS HIDDEN\n";
+        tmp = L"[+] FindNextFile FILE WAS HIDDEN";
+        //pipeClient.writeWstringToPipe(tmp);
         BOOL ret = pFindNextFileW(hFindFile, lpFindFileData);
     }
     
@@ -138,7 +206,7 @@ bool readConfigFromPipe(LPCWSTR* pipeName)
     while (hPipe == INVALID_HANDLE_VALUE)
     {
         hPipe = CreateFile(
-            *pipeName,                     // Имя канала
+            *pipeName,                   // Имя канала
             GENERIC_READ,                // Режим доступа
             0,                           // Нет разделяемого доступа
             NULL,                        // Защита по умолчанию

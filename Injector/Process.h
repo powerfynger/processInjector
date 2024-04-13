@@ -4,8 +4,7 @@
 #include <string>
 #include <stdexcept>
 #include <psapi.h>
-
-
+#include "../PipeInstance/PipeInstance.h"
 
 class Process
 {

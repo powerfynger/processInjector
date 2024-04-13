@@ -4,6 +4,9 @@
 #include "detours.h"
 #include <vector>
 #include "../Injector/Injector.h"
+#include "../PipeInstance/PipeInstance.h"
+
+
 
 #ifdef MYDLL_EXPORTS
 #define MYDLL_API __declspec(dllexport)
@@ -11,8 +14,16 @@
 #define MYDLL_API __declspec(dllimport)
 #endif
 
+typedef FARPROC(WINAPI* PfnOriginalFunction)(LPCSTR);
+
+
+std::vector<PfnOriginalFunction> originalFunctions;
+
+
 //static std::string fileNameToHide;
 DllData conf;
+PipeInstance pipeClient(std::wstring(L"\\\\.\\pipe\\NothingSpecialHere"));
+
 
 MYDLL_API BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved);
 
@@ -60,3 +71,5 @@ BOOL (WINAPI *pFindNextFileW)(
 
 bool readConfigFromPipe(LPCWSTR* pipeName);
 std::wstring getFileName(const std::wstring& filePath);
+
+FARPROC WINAPI MyHookFunction(LPCSTR functionName);

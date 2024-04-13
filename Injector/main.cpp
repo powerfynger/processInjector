@@ -2,7 +2,7 @@
 #include <string>
 #include "Process.h"
 #include "Injector.h"
-#include "..\FakeDll\mainDll.h"
+//#include "..\FakeDll\mainDll.h"
 // TODO:
 // Отдельный класс для сервера/клиента pipe
 // Мониторинг вызовов произвольных функций из kernel32

@@ -34,7 +34,7 @@ void PipeInstance::connectPipeClient()
 {
     _hPipe = CreateFile(
         _pipeName.c_str(),           // Имя канала
-        PIPE_ACCESS_DUPLEX | PIPE_NOWAIT,                // Режим доступа
+        PIPE_ACCESS_DUPLEX ,                // Режим доступа
         0,                           // Нет разделяемого доступа
         NULL,                        // Защита по умолчанию
         OPEN_EXISTING,               // Открыть существующий канал

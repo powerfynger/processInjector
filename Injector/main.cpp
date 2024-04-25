@@ -29,6 +29,7 @@ int wmain(int argc, wchar_t* argv[])
         }
         else if (arg == L"-func" && i + 1 < argc) 
         {
+
             functionName = argv[++i];
         }
         else if (arg == L"-hide" && i + 1 < argc) 
@@ -37,7 +38,15 @@ int wmain(int argc, wchar_t* argv[])
         }
     }
 
+    //Injector a(GetCurrentProcessId());
+    //a.injectDll(dllName, hideFileName, functionName);
     
+    //Sleep(5000);
+    //LoadLibraryA(dllName.c_str());
+    //GetTickCount();
+    //Sleep(5000);
+    //return 0;
+
     if (processName != L"")
     {
         Injector inj(processName);
@@ -48,33 +57,32 @@ int wmain(int argc, wchar_t* argv[])
         Injector inj(pid);
         inj.injectDll(dllName, hideFileName, functionName);
     }
-    return 0;
-    /*
+    
 
-    WIN32_FIND_DATAA fd = { 0 };
-    FILE_NAME_INFO inf = { 0 };
+    //WIN32_FIND_DATAA fd = { 0 };
+    //FILE_NAME_INFO inf = { 0 };
 
-    HANDLE hFind = FindFirstFileA("C:\\Users\\puuni\\aaa.pdf", &fd);
-    std::cout << fd.cFileName << std::endl;
+    //HANDLE hFind = FindFirstFileA("C:\\Users\\puuni\\aaa.pdf", &fd);
+    //std::cout << fd.cFileName << std::endl;
 
-    if (FindNextFileA(hFind, &fd))
-    {
-        std::cout << fd.cFileName << std::endl;
-    }
+    //if (FindNextFileA(hFind, &fd))
+    //{
+        //std::cout << fd.cFileName << std::endl;
+    //}
 
     //HINSTANCE dynamicLib = LoadLibraryA("FakeDll.dll");
-    Injector a(GetCurrentProcessId());
+/*    Injector a(GetCurrentProcessId());
     a.injectDll(dllName, hideFileName, functionName);
+    GetTickCount()*/;
+    //fd = { 0 };
+    //hFind = FindFirstFileA("C:\\Users\\puuni\\aaa.pdf", &fd);
     
-    fd = { 0 };
-    hFind = FindFirstFileA("C:\\Users\\puuni\\aaa.pdf", &fd);
-    
-    std::cout << fd.cFileName << std::endl;
+    //std::cout << fd.cFileName << std::endl;
 
-    if (FindNextFileA(hFind, &fd))
-    {
-        std::cout << fd.cFileName << std::endl;
-    }
-    */
+    //if (FindNextFileA(hFind, &fd))
+    //{
+        //std::cout << fd.cFileName << std::endl;
+    //}
+    
     return 0;
 }

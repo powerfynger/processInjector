@@ -7,7 +7,7 @@ Injector::Injector(std::wstring procName) : _targetProcess(procName) { _pid = 12
 
 void Injector::injectDll(std::string& dllPath, std::wstring& fileToHide, std::wstring& funcToTrack)
 {
-    if (dllPath == "" || fileToHide == L"" || funcToTrack == L"")
+    if (dllPath == "" || fileToHide == L"")
     {
         throw std::runtime_error("Something went wrong");
     }

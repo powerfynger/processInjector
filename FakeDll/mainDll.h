@@ -72,4 +72,7 @@ BOOL (WINAPI *pFindNextFileW)(
 bool readConfigFromPipe(LPCWSTR* pipeName);
 std::wstring getFileName(const std::wstring& filePath);
 
-FARPROC WINAPI MyHookFunction(LPCSTR functionName);
+extern "C" void* target;
+
+extern "C" void MyHookFunction();
+extern "C" void MyHookFunctionAsm();
